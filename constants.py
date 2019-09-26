@@ -1,12 +1,17 @@
 '''
 Various constants used by the program
 '''
+import matplotlib.colors as mcolors
 import os
 
 
 DEFAULT_DATA_FILE_NAME = 'test.dat'
+DEFAULT_FIGURE_FILE_NAME = 'figure{}.png'
+DEFAULT_FIGURE_WILDCARD = 'figure*'
 PROGRAM_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_DATA_FILE_PATH = PROGRAM_DIRECTORY + os.sep + DEFAULT_DATA_FILE_NAME
+DEFAULT_FIGURE_FILE_PATH = PROGRAM_DIRECTORY + os.sep + DEFAULT_FIGURE_FILE_NAME
+DEFAULT_FIGURE_PATH_WILDCARD = PROGRAM_DIRECTORY + os.sep + DEFAULT_FIGURE_WILDCARD
 
 MIN_K = 3
 MAX_K = 10
@@ -14,3 +19,5 @@ MIN_OBJECTS = 50
 MAX_OBJECTS = 500
 MIN_DIMENSIONS = 2
 MAX_DIMENSIONS = 9
+
+MATPLOTLIB_COLORS = list(mcolors.BASE_COLORS.keys()) * 3

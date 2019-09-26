@@ -35,8 +35,27 @@ def handle(data, num_objects, num_dimensions, k_min, k_max):
 	handle the flow of the algorithm
 	'''
 	if num_dimensions > 3:
+		print('Pruning dataset from {} dimensions to 3...'.format(num_dimensions))
 		data = cluster.prune_dimensions(data)
-		print(data)
+		# print(data)
+	print('Beginning k-means clustering on set of {} objects...'.format(num_objects))
+	for k in range(k_min, k_max + 1):
+		cluster_dict = cluster.assign_initial_centroids(data, k)
+		cluster_dict = cluster.assign_points_to_clusters(cluster_dict, data)
+		sse = cluster.get_sum_of_squared_error(cluster_dict)
+		while True:
+			new_cluster_dict = cluster.reassign_centroids(cluster_dict)
+			new_cluster_dict = cluster.assign_points_to_clusters(new_cluster_dict, data)
+			new_sse = cluster.get_sum_of_squared_error(new_cluster_dict)
+			if new_sse == sse:
+				print('SSE for k = {}: {}'.format(k, sse))
+				try:
+					filepath = utils.visualize(new_cluster_dict, num_dimensions)
+					print('Saved figure "{}"'.format(filepath))
+				except:
+					pass
+				break
+			sse = new_sse
 
 
 if __name__ == '__main__':
@@ -60,6 +79,17 @@ if __name__ == '__main__':
 		if not os.path.exists(data_file):
 			print('"{}" not found on disk.  Create new test data "{}" in program directory with option -b'.format(data_file, DEFAULT_DATA_FILE_NAME))
 			sys.exit(0)
-		print('running clustering algorithm on {}...'.format(data_file))
+
+		filepaths = utils.delete_existing_scatterplot_figures()
+		delete_msg = 'Removed {} from the file system'.format(filepaths)
+		print(delete_msg)
+
+		print('Preparing {}...'.format(data_file))
 		data, params = utils.prepare_data(data_file)
-		handle(data, *params)
+
+		handle(data, *map(int, params))
+
+		try:
+			utils.display_visuals()
+		except:
+			pass

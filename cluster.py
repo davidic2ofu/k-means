@@ -4,8 +4,6 @@ K-means clustering and subset selection functions
 '''
 from collections import defaultdict
 from math import ceil
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 
@@ -54,29 +52,39 @@ def get_euclidean_distance(p1, p2):
 	return dist
 
 
-def get_initial_centroid_indices(data, k):
+def get_sum_of_squared_error(cluster_dict):
+	sum = 0
+	for centroid, cluster in cluster_dict.items():
+		for obj in cluster:
+			dist = get_euclidean_distance(obj, centroid)
+			sum += dist ** 2
+	return sum
+
+
+def assign_initial_centroids(data, k):
 	centroid_indices = np.random.choice(range(len(data)), k, replace=False)
-	return centroid_indices
+	cluster_dict = {}
+	for centroid_index in centroid_indices:
+		coordinates = tuple((x for x in data[centroid_index]))
+		cluster_dict[coordinates] = []
+	return cluster_dict
 
 
-def assign_objects_to_clusters(data, centroid_indices):
-	assignment_dict = defaultdict(list)
-	non_centroid_indices = set(range(len(data))) - set(centroid_indices)
-	for object_index in non_centroid_indices:
+def reassign_centroids(cluster_dict):
+	new_cluster_dict = {}
+	for i in range(len(cluster_dict)):
+		column = list(cluster_dict.values())[i]
+		col_mean = np.mean(column, axis=0)
+		new_cluster_dict[tuple(col_mean)] = []
+	return new_cluster_dict
+
+
+def assign_points_to_clusters(cluster_dict, data):
+	for datum in data:
 		distance_dict = {}
-		for centroid_index in centroid_indices:
-			distance_dict[centroid_index] = get_euclidean_distance(data[centroid_index], data[object_index])
-		winning_centroid_index, _ = sorted(distance_dict.items(), key=lambda x: x[1])[0]
-		assignment_dict[winning_centroid_index].append(object_index)
-
-	fig = plt.figure()
-	ax = fig.add_subplot(111, projection='3d')
-	m = {0: 'Reds', 1: 'Blues', 2: 'Greens'}
-	for i, (ci, il) in enumerate(assignment_dict.items()):
-		xdata = data[il, 0]
-		ydata = data[il, 1]
-		zdata = data[il, 2]
-		ax.scatter3D(xdata, ydata, zdata, c=zdata, cmap=m[i])
-		ax.scatter3D([data[ci][0]], [data[ci][1]], [data[ci][2]], c=[data[ci][2]], cmap='Accent')
-	plt.savefig('file.png')
+		for candidate_centroid in cluster_dict.keys():
+			distance_dict[candidate_centroid] = get_euclidean_distance(candidate_centroid, datum)
+		winning_centroid, _ = sorted(distance_dict.items(), key=lambda x: x[1])[0]
+		cluster_dict[winning_centroid].append(datum)
+	return cluster_dict
 
