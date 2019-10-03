@@ -36,8 +36,8 @@ def handle(data, num_objects, num_dimensions, k_min, k_max):
 	'''
 	if num_dimensions > 3:
 		print('Pruning dataset from {} dimensions to 3...'.format(num_dimensions))
-		data = cluster.prune_dimensions(data)
-		# print(data)
+		data = cluster.prune_dimensions_brute_force(data)
+
 	print('Beginning k-means clustering on set of {} objects...'.format(num_objects))
 
 	output_list = []
@@ -63,7 +63,7 @@ def handle(data, num_objects, num_dimensions, k_min, k_max):
 
 		try:
 			filepath = utils.visualize(cluster_dict, num_dimensions)
-			print('Saved figure "{}"'.format(filepath))
+			print('Saved figure {}'.format(filepath))
 		except:
 			pass
 
@@ -94,8 +94,9 @@ if __name__ == '__main__':
 			sys.exit(0)
 
 		filepaths = utils.delete_existing_scatterplot_figures()
-		delete_msg = 'Removed {} from the file system'.format(filepaths)
-		print(delete_msg)
+		if filepaths:
+			delete_msg = 'Removed {} from the file system'.format(filepaths)
+			print(delete_msg)
 
 		print('Preparing {}...'.format(data_file))
 		data, params = utils.prepare_data(data_file)

@@ -34,14 +34,13 @@ def build_data_file():
 	num_dimensions = np.random.randint(MIN_DIMENSIONS, MAX_DIMENSIONS)
 
 	header = [num_objects, num_dimensions, k_min, k_max]
-	objects = np.random.rand(num_objects, num_dimensions) * 100
+	objects = np.random.rand(num_objects, num_dimensions)
 
 	with open(DEFAULT_DATA_FILE_PATH, 'w+') as f:
 		f.write(' '.join(map(str, header)) + '\n')
 		np.savetxt(f, objects)
 
 	msg = 'created data file: ' + DEFAULT_DATA_FILE_PATH
-
 	return msg
 
 
@@ -64,7 +63,7 @@ def delete_existing_scatterplot_figures():
 	filelist = glob.glob(wildcard)
 	for filepath in filelist:
 		os.remove(filepath)
-	return wildcard
+	return wildcard if filelist else ''
 
 
 def display_visuals():

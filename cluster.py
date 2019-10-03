@@ -1,53 +1,59 @@
 '''
-K-means clustering and subset selection functions
+K-means clustering and subspace selection functions
 (actual data mining tools)
 '''
-from collections import defaultdict
-from math import ceil
+from itertools import combinations
 import numpy as np
 
 
-def prune_dimensions(data):
+def get_entropy_over_space(space):
 	'''
-	Use subspace selection to prune all but the three columns
-	with the minimum entropy values
+	1. Create buckets that keep up with number of points in each subspace.
+	   The subspaces are defined by deltas in each dimension set to 1/10 of the
+	   dimension's range.
+	   - i.e., if space is 3-d, then there will be 10^3 subspaces (and buckets)
+	2. Calculate density of each subspace
+	3. Calculate entropy of the whole space based on densities of the subspaces
 	'''
-	entropy_dict = {}
-	column_length = data.shape[1]
+	deltas = [(min(column), (max(column) - min(column)) / 10) for column in space.T]
+	num_dims = space.shape[1]
+	buckets = np.zeros(10 ** num_dims)
+	for obj in space:
+		bucket_index = 0
+		for i, coordinate in enumerate(obj):
+			shifted = coordinate - deltas[i][0]
+			if deltas[i][1] == 0:
+				continue
+			index = shifted // deltas[i][1]
+			if index == 10:
+				index = 9
+			index *= 10 ** i
+			bucket_index += index
+		buckets[int(bucket_index)] += 1
+	densities = buckets / buckets.size
+	entropy = -np.sum(densities * np.ma.log2(densities).filled(0))
+	return entropy
 
-	# evaluate dataset, column by column
-	for index, column in enumerate(data.T):
 
-		# delta = maximum value in column - minimum value in column / 10
-		min_column = min(column)
-		delta = (max(column) - min_column) / 10
-
-		# put values into the 10 buckets (respective deltas)
-		val_bucket_dict = defaultdict(list)
-		for val in column:
-			if val == min_column:
-				bucket = 1
-			else:
-				bucket = ceil((val - min_column) / delta)
-			val_bucket_dict[bucket].append(val)
-
-		# calculate density in each bucket then update total entropy over the column
-		entropy = 0		
-		for vals in val_bucket_dict.values():
-			density = len(vals) / column_length
-			entropy -= density * np.log(density)
-		entropy_dict[index] = entropy
-	print('entropy dict {}'.format(entropy_dict))
-	# prune all but the three columns with smallest entropy value, return the pruned dataset
-	sorted_by_entropy = sorted(entropy_dict.items(), key=lambda x: x[1])[:3]
-	columns_with_min_entropy = [val[0] for val in sorted_by_entropy]
-	data_after_subspace_selection = data[:,columns_with_min_entropy]
-
-	return data_after_subspace_selection
+def prune_dimensions_brute_force(data):
+	'''
+	Brute force approach:
+	calculate entropy of each 3-d combination of subspaces in dataset;
+	select subspace with lowest entropy value
+	'''
+	num_columns = data.shape[1]
+	all_3d_combinations = combinations(range(num_columns), 3)
+	space_entropy_map = {}
+	for comb in all_3d_combinations:
+		space = data[:,comb]
+		space_entropy_map[comb] = get_entropy_over_space(space)
+	best_comb = min(space_entropy_map, key=space_entropy_map.get)
+	return data[:,best_comb]
 
 
 def get_euclidean_distance(p1, p2):
-	sum_of_squares = sum([(p1[i] - p2[i]) ** 2 for i in range(len(p1))])
+	p1, p2 = map(np.array, (p1, p2))
+	sum_of_squares = np.sum((p1 - p2) ** 2)
 	dist = np.sqrt(sum_of_squares)
 	return dist
 
