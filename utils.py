@@ -45,6 +45,20 @@ def build_data_file():
 	return msg
 
 
+def generate_output_file(output_list):
+	'''
+	Generate output file:
+	k and sse on each line
+	'''
+	outfile = PROGRAM_DIRECTORY + os.sep + 'test.res'
+	with open(outfile, 'w+') as f:
+		for k, sse in output_list:
+			f.write('{} {}\n'.format(k, sse))
+
+	msg = 'Generated output file {}'.format(outfile)
+	return msg
+
+
 def delete_existing_scatterplot_figures():
 	wildcard = PROGRAM_DIRECTORY + os.sep + '*.png'
 	filelist = glob.glob(wildcard)

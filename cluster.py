@@ -37,7 +37,7 @@ def prune_dimensions(data):
 			density = len(vals) / column_length
 			entropy -= density * np.log(density)
 		entropy_dict[index] = entropy
-
+	print('entropy dict {}'.format(entropy_dict))
 	# prune all but the three columns with smallest entropy value, return the pruned dataset
 	sorted_by_entropy = sorted(entropy_dict.items(), key=lambda x: x[1])[:3]
 	columns_with_min_entropy = [val[0] for val in sorted_by_entropy]

@@ -39,23 +39,36 @@ def handle(data, num_objects, num_dimensions, k_min, k_max):
 		data = cluster.prune_dimensions(data)
 		# print(data)
 	print('Beginning k-means clustering on set of {} objects...'.format(num_objects))
+
+	output_list = []
+
 	for k in range(k_min, k_max + 1):
+		
+		# prepare initial clusters
 		cluster_dict = cluster.assign_initial_centroids(data, k)
 		cluster_dict = cluster.assign_points_to_clusters(cluster_dict, data)
-		sse = cluster.get_sum_of_squared_error(cluster_dict)
-		while True:
-			new_cluster_dict = cluster.reassign_centroids(cluster_dict)
-			new_cluster_dict = cluster.assign_points_to_clusters(new_cluster_dict, data)
-			new_sse = cluster.get_sum_of_squared_error(new_cluster_dict)
-			if new_sse == sse:
-				print('SSE for k = {}: {}'.format(k, sse))
-				try:
-					filepath = utils.visualize(new_cluster_dict, num_dimensions)
-					print('Saved figure "{}"'.format(filepath))
-				except:
-					pass
-				break
+		new_sse = cluster.get_sum_of_squared_error(cluster_dict)
+
+		# max 20 iterations to converge
+		for _ in range(20):
 			sse = new_sse
+			cluster_dict = cluster.reassign_centroids(cluster_dict)
+			cluster_dict = cluster.assign_points_to_clusters(cluster_dict, data)
+			new_sse = cluster.get_sum_of_squared_error(cluster_dict)
+			if new_sse == sse:
+				break
+
+		print('SSE for k = {}: {}'.format(k, sse))
+		output_list.append((k, sse))
+
+		try:
+			filepath = utils.visualize(cluster_dict, num_dimensions)
+			print('Saved figure "{}"'.format(filepath))
+		except:
+			pass
+
+	msg = utils.generate_output_file(output_list)
+	print(msg)
 
 
 if __name__ == '__main__':
